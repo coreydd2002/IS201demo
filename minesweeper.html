@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper</title>
+  <link href="css/minesweeper.css" rel="stylesheet" />
+</head>
+<body>
+  <h1>Minesweeper</h1>
+  <div id="board"></div>
+
+  <script>
+    const boardSize = 10;
+    const mineCount = 10;
+    const board = document.getElementById('board');
+    const cells = [];
+
+    function createBoard() {
+      const mines = new Set();
+      while (mines.size < mineCount) {
+        mines.add(Math.floor(Math.random() * boardSize * boardSize));
+      }
+
+      for (let i = 0; i < boardSize * boardSize; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        board.appendChild(cell);
+        cells.push(cell);
+
+        cell.addEventListener('click', () => revealCell(i));
+      }
+
+      cells.forEach((cell, index) => {
+        if (mines.has(index)) {
+          cell.dataset.bomb = 'true';
+        }
+      });
+    }
+
+    function revealCell(index) {
+      const cell = cells[index];
+      if (cell.classList.contains('revealed')) return;
+
+      cell.classList.add('revealed');
+
+      if (cell.dataset.bomb === 'true') {
+        cell.textContent = '💣';
+        cell.classList.add('bomb');
+        alert('Boom! Game Over.');
+        revealAll();
+        return;
+      }
+
+      const neighbors = getNeighbors(index);
+      const bombCount = neighbors.filter(i => cells[i].dataset.bomb === 'true').length;
+
+      if (bombCount > 0) {
+        cell.textContent = bombCount;
+      } else {
+        neighbors.forEach(revealCell);
+      }
+    }
+
+    function getNeighbors(index) {
+      const neighbors = [];
+      const row = Math.floor(index / boardSize);
+      const col = index % boardSize;
+
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const r = row + dr;
+          const c = col + dc;
+          if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+            neighbors.push(r * boardSize + c);
+          }
+        }
+      }
+      return neighbors;
+    }
+
+    function revealAll() {
+      cells.forEach((cell, index) => {
+        if (cell.dataset.bomb === 'true') {
+          cell.textContent = '💣';
+          cell.classList.add('bomb');
+        }
+        cell.classList.add('revealed');
+      });
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>
